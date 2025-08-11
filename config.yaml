@@ -1,2 +1,4 @@
 data:
-  path:
+  path: ''
+  tiff_suffixes: []
+  marker_suffixes: []
