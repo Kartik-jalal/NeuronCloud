@@ -2,3 +2,4 @@ data:
   path: ''
   tiff_suffixes: []
   marker_suffixes: []
+  use_marker_radius: True # whether to use the .marker* file radius column or not
