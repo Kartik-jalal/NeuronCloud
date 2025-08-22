@@ -11,7 +11,7 @@ Functions:
     - choose_background_start
 
 Usage:
-    from src import *
+    from src import <<function_name>>, ... || *
 
 Last Update:
     Owner: Kartik M. Jalal
