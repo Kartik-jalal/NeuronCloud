@@ -10,7 +10,7 @@ Functions:
     - random_intensity_jitter
 
 Usage:
-    from src import clip_percentile, normalise_zscore, random_flip_xy, random_intensity_jitter
+    from src import <<function_name>>, ... || *
 
 Last Update:
     Owner: Kartik M. Jalal
