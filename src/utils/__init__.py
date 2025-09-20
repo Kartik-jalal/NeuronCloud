@@ -9,12 +9,16 @@ Modules:
     - data.py: Provides functions to reading the data.
 
 Exports:
+        #### ground_truth.py  ####
     - ground_truth.generate_ground_truth
     - ground_truth.load_marker
+        #### preprocess.py  ####
     - preprocess.clip_percentile
     - preprocess.normalise_zscore
     - preprocess.random_flip_xy
     - preprocess.random_intensity_jitter
+        #### data.py  ####
+    - data.get_tiff_img
     - data.get_data_info
     - data.train_val_test_split
     - data.crop3d
@@ -23,20 +27,25 @@ Exports:
 
 Last Update:
     Owner: Kartik M. Jalal
-    Date: 22/08/2025
+    Date: 20/09/2025
 """
 
 from .ground_truth import generate_ground_truth, load_marker
 from .preprocess import clip_percentile, normalise_zscore, random_flip_xy, random_intensity_jitter
-from .data import get_data_info, train_val_test_split, crop3d, choose_positive_start, choose_background_start
+from .data import get_tiff_img, get_data_info, train_val_test_split, crop3d, choose_positive_start, choose_background_start
+
 
 __all__ = [
+    #### ground_truth.py  ####
     "generate_ground_truth",
     "load_marker",
+    #### preprocess.py  ####
     "clip_percentile",
     "normalise_zscore",
     "random_flip_xy",
     "random_intensity_jitter",
+    #### data.py  ####
+    "get_tiff_img",
     "get_data_info",
     "train_val_test_split",
     "crop3d",
