@@ -14,7 +14,7 @@ Usage:
 
 Last Update:
     Owner: Kartik M. Jalal
-    Date: 22/08/2025
+    Date: 20/09/2025
 
 """
 import numpy as np
@@ -72,7 +72,13 @@ def normalise_zscore(vol: np.ndarray, eps: float = 1e-6) -> np.ndarray:
     return ((vol-mean_val) / std_val).astype(np.float32)
 
 
-def random_flip_xy(vol: np.ndarray, prob: float = 0.5) -> np.ndarray:
+def random_flip_xy(
+    vol: np.ndarray,
+    heatmap: np.ndarray,
+    offsets: np.ndarray,
+    offset_mask: np.ndarray,
+    prob: float = 0.5
+) -> dict:
     """
         Randomly flip a 3D volume along X and Y axes.
 
@@ -85,13 +91,38 @@ def random_flip_xy(vol: np.ndarray, prob: float = 0.5) -> np.ndarray:
             - prob (float): probability of flipping per axis.
 
         Outputs:
-            - np.ndarray, same shape as vol, possibly flipped (copy to ensure contiguous memory)
+            - dict(
+                - np.ndarray, same shape as vol, possibly flipped (copy to ensure contiguous memory)
+            )
+            
     """
-    if np.random.rand() < prob: 
+    do_x_flip =  np.random.rand() < prob
+    do_y_flip = np.random.rand() < prob
+
+    if do_x_flip:
         vol = vol[:, :, ::-1].copy() # flip X
-    if np.random.rand() < prob:
-        vol = vol[:, ::-1, :].copy() # flip Y
-    return vol
+        heatmap = heatmap[:, :, ::-1].copy()
+        offsets = offsets[:, :, :, ::-1].copy()
+        offset_mask = offset_mask[:, :, ::-1].copy()
+
+        # for offsets, flip Δx channel direction sign
+        offsets[2] *= -1
+    
+    if do_y_flip:
+        vol = vol[:, ::-1, :].copy() # flip X
+        heatmap = heatmap[:, ::-1, :].copy()
+        offsets = offsets[:, :, ::-1, :].copy()
+        offset_mask = offset_mask[:, ::-1, :].copy()
+
+        # for offsets, flip Δx channel direction sign
+        offsets[1] *= -1
+
+    return dict(
+        vol=vol,
+        heatmap=heatmap,
+        offsets=offsets,
+        offset_mask=offset_mask
+    )
 
 
 def random_intensity_jitter(

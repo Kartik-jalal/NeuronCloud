@@ -14,11 +14,11 @@ Functions:
     - build_offsets_and_mask
 
 Usage:
-    from src import generate_ground_truth, load_marker
+    from src import <<function_name>>, ... || *
 
 Last Update:
     Owner: Kartik M. Jalal
-    Date: 13/08/2025
+    Date: 20/09/2025
 
 """
 
@@ -30,7 +30,7 @@ from scipy.ndimage import gaussian_filter  # used to blur images to create smoot
 def load_marker(
     marker_path,
     default_max_radius=3.5,
-    use_marker_radius=False
+    use_marker_radius=True
 ):
     """
         Reads a '.marker*' file where each row has:
@@ -79,7 +79,7 @@ def load_marker(
 
         neurons = np.stack([zs, ys, xs, max_radii], axis=1).astype(np.float32)
 
-        return neurons
+        return neurons.astype(np.float32)
 
 
 def filter_neurons(neurons, ground_truth_shape):
@@ -100,7 +100,7 @@ def filter_neurons(neurons, ground_truth_shape):
 
     filtration = (z_n > 0) & (y_n > 0) & (x_n > 0) & (z_n < z_gt) & (y_n < y_gt) & (x_n < x_gt)
 
-    return neurons[filtration]
+    return neurons[filtration].astype(np.float32)
 
 
 def knn_spacing(neurons_coords, k=1):
@@ -134,8 +134,8 @@ def knn_spacing(neurons_coords, k=1):
 def compute_radii(
     neurons,
     knn_k,              # k-th neighbor to consider in "knn"
-    knn_radius_scale,   # Fraction of neighbor distance to use for radius in "knn"
-    radius_min          # Minimum allowed radius
+    knn_radius_scale=0.33,   # Fraction of neighbor distance to use for radius in "knn"
+    radius_min=1.0      # Minimum allowed radius
 ):
     """
         Decide how big each Gaussian blob should be for each neuron.
@@ -192,8 +192,8 @@ def radius_to_sigma_per_axis(radius, dim_resolution):
 def build_heatmap_and_peaks(
         neurons, 
         dim_resolution,
-        quantize_sigma,
-        ground_truth_shape
+        ground_truth_shape,
+        quantize_sigma=0.1,
 ):
     """
         Build heatmap and peaks map given neurons coords and thier radius
@@ -261,7 +261,7 @@ def build_heatmap_and_peaks(
     if hm_max > 0:
         heatmap /= hm_max
 
-    return heatmap, peaks, sigmas
+    return heatmap.astype(np.float32), peaks.astype(np.float32), sigmas.astype(np.float32)
 
 
 def build_offsets_and_mask(
@@ -269,7 +269,7 @@ def build_offsets_and_mask(
         ground_truth_shape
 ):
     """
-        Build dense ground-truth offset and mas volumnes.
+        Build dense ground-truth offset and mask volumnes.
 
         Inputs :
             - neurons : array of shape (:, 4), each row = (nz, ny, nx, r)
@@ -318,17 +318,22 @@ def build_offsets_and_mask(
         
         if z0_bbox >= z1_bbox or y0_bbox >= y1_bbox or x0_bbox >= x1_bbox:
             continue
+
+        bbox_shape = (z1_bbox-z0_bbox, y1_bbox-y0_bbox, x1_bbox-x0_bbox)
         
         # voxel coordinates inside this bounding box
-        zz_bbox = np.arange(z0_bbox, z1_bbox, dtype=np.float32)[:, None, None] # (ΔZ, 1, 1)
-        yy_bbox = np.arange(y0_bbox, y1_bbox, dtype=np.float32)[None, :, None] # (1, ΔY, 1)
-        xx_bbox = np.arange(x0_bbox, x1_bbox, dtype=np.float32)[None, None, :] # (1, 1, ΔX)
+        zz_bbox, yy_bbox, xx_bbox = np.indices(bbox_shape, dtype=np.float32)
+        zz_bbox += z0_bbox
+        yy_bbox += y0_bbox
+        xx_bbox += x0_bbox
+        # zz_bbox = np.arange(z0_bbox, z1_bbox, dtype=np.float32)[:, None, None] # (ΔZ, 1, 1)
+        # yy_bbox = np.arange(y0_bbox, y1_bbox, dtype=np.float32)[None, :, None] # (1, ΔY, 1)
+        # xx_bbox = np.arange(x0_bbox, x1_bbox, dtype=np.float32)[None, None, :] # (1, 1, ΔX)
 
         # Compute offsets, i.e., how far each voxel center is from the neuron centroid
         dz = (nz - zz_bbox)
         dy = (ny - yy_bbox)
         dx = (nx - xx_bbox)
-
 
         # Boolean mask: which voxels are inside the spherical supervision region
         inside = (dz*dz + dy*dy + dx*dx) <= (r * r) # squared/Euclidean distance
@@ -349,14 +354,14 @@ def build_offsets_and_mask(
             z0_bbox:z1_bbox,
             y0_bbox:y1_bbox,
             x0_bbox:x1_bbox
-        ][inside] = dz[inside]
+        ][inside] = dy[inside]
         ## Δx channel
         offsets[
             2,
             z0_bbox:z1_bbox,
             y0_bbox:y1_bbox,
             x0_bbox:x1_bbox
-        ][inside] = dz[inside]
+        ][inside] = dx[inside]
         # binary mask, 1 where we wrote offsets, 0 elsewhere
         mask[
             z0_bbox:z1_bbox,
@@ -365,7 +370,7 @@ def build_offsets_and_mask(
         ][inside] = 1.0
 
 
-    return offsets, mask
+    return offsets.astype(np.float32), mask.astype(np.float32)
 
 
 def generate_ground_truth(
@@ -373,13 +378,13 @@ def generate_ground_truth(
     ground_truth_shape,
     dim_resolution, # Size of each voxel (Z, Y, X)
     use_marker_radius,
-    default_max_radius=3.5,
-    radius_safe_factor=3.5,
-    radius_min=1.0,
+    default_max_radius,
+    radius_min,
+    knn_k,
+    knn_radius_scale,
+    quantize_sigma=0.1, # Round sigma values to reduce unique cases
     downscale_factors=None, # Scale coordinates if image is downsampled
-    knn_k=1,
-    knn_radius_scale=0.33,
-    quantize_sigma=0.1 # Round sigma values to reduce unique cases
+
 ):
     """
         This function:
@@ -409,9 +414,11 @@ def generate_ground_truth(
         return dict(
             heatmap=np.zeros(ground_truth_shape, np.float32), # empty heat map
             peaks=np.zeros(ground_truth_shape, np.float32), # empty peaks map
+            offsets=np.zeros([3]+ground_truth_shape, np.float32), # empty offsets map
+            offset_mask=np.zeros(ground_truth_shape, np.float32), # empty offset mask
             meta=dict(
                 neurons=neurons,
-                sigmas=np.array([])
+                sigmas=np.array([tuple()], np.float32)
             )
         )
 
@@ -431,9 +438,11 @@ def generate_ground_truth(
         return dict(
             heatmap=np.zeros(ground_truth_shape, np.float32), # empty heat map
             peaks=np.zeros(ground_truth_shape, np.float32), # empty peaks map
+            offsets=np.zeros([3]+ground_truth_shape, np.float32), # empty offsets map
+            offset_mask=np.zeros(ground_truth_shape, np.float32), # empty offset mask
             meta=dict(
                 neurons=neurons,
-                sigmas=np.array([])
+                sigmas=np.array([tuple()], np.float32)
             )
         )
     

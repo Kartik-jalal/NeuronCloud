@@ -1,9 +1,10 @@
 """
 data.py
 
-Provides functions to read, preprocess, augument the data.
+Provides functions to read, preprocess and augument the data.
 
 Functions:
+    - get_tiff_img
     - get_data_info
     - train_val_test_split
     - crop3d
@@ -15,14 +16,33 @@ Usage:
 
 Last Update:
     Owner: Kartik M. Jalal
-    Date: 22/08/2025
+    Date: 23/08/2025
 
 """
 import numpy as np
 import pandas as pd
 import os
-import utils
+from . import load_marker
 from sklearn.model_selection import train_test_split
+import tifffile
+
+
+def get_tiff_img(img_path: str) -> np.ndarray:
+    """
+        Return the tiff image.
+
+        Description:
+            Reads and returns the tiff image at the given path 
+            in numpy format.
+
+        Inputs:
+            - img_path (str): The path to the tiff image file.
+
+        Outputs:
+            - np.ndarray, (Z, Y, X) numpy format of the tiff image.
+            
+    """
+    return tifffile.imread(img_path)
 
 
 def get_data_info(data_path: str, tiff_suffixes: list, marker_suffix: str) -> pd.DataFrame:
@@ -67,7 +87,7 @@ def get_data_info(data_path: str, tiff_suffixes: list, marker_suffix: str) -> pd
             continue # skip to the next file name
         
         # read the number of neurons present in the marker file
-        n_neuron = len(utils.load_marker(marker_path))
+        n_neuron = len(load_marker(marker_path))
 
         # add all the info together
         data_info.append(
@@ -135,7 +155,7 @@ def train_val_test_split(
     if straify:
         # divide the data into 'n_neurons_bins' bins (which is based on the "n_neurons" column),
         # and create a new column which contains the bin info for that data
-        df["n_neurons_bins"] = pd.cut(df["n_neurons"], bins=n_neurons_bins)
+        df["n_neurons_bins"] = pd.cut(df["n_neurons"], bins=n_neurons_bins, labels=False)
 
     # initial "train with val" and "test" split
     train_val, test = train_test_split(
