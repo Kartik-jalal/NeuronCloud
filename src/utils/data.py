@@ -195,7 +195,7 @@ def clamp_start(start: int, size: int, max_size: int) -> int:
     return max(0, min(start, max_size - size))
 
 
-def crop3d(vol : np.ndarray, start: tuple, size: tuple) -> np.ndarray:
+def crop3d(vol : np.ndarray, start: tuple, patch_size: tuple) -> np.ndarray:
     """
         Extract a 3D patch from a volume.
 
@@ -205,13 +205,13 @@ def crop3d(vol : np.ndarray, start: tuple, size: tuple) -> np.ndarray:
         Inputs:
             - vol (np.ndarray): 3D volume (Z, Y, X).
             - start (tuple(int, int, int)): top-left-frony indicies (z0, y0, x0).
-            - size (tuple(int, int, int)): patch size (dz, dy, dx).
+            - patch_size (tuple(int, int, int)): patch size (dz, dy, dx).
 .
         Outputs:
             - np.ndarray, 3D patch (dz, dy, dx).
     """
     z0, y0, x0 = start
-    dz, dy, dx = size
+    dz, dy, dx = patch_size
 
     return vol[z0:z0+dz, y0:y0+dy, x0:x0+dx]
 
@@ -219,7 +219,7 @@ def crop3d(vol : np.ndarray, start: tuple, size: tuple) -> np.ndarray:
 def choose_positive_start(
         neurons: np.ndarray,
         vol_shape: type,
-        patch: tuple = (96, 96, 96),
+        patch_size: tuple = (96, 96, 96),
         jitter_frac: float = 1/6
 ) -> tuple:
     """
@@ -232,14 +232,14 @@ def choose_positive_start(
         Inputs:
             - neurons (np.ndarray): shape(N, 3) of floar voxel coords (z, y, x).
             - vol_shape (tuple(int, int, int)): full volume shape (Z, Y, X).
-            - patch (tuple(int, int, int)): desired patch size (dz, dy, dx).
+            - patch_size (tuple(int, int, int)): desired patch size (dz, dy, dx).
             - jitter_frac (float): fraction of patch size for random jitter.
 
         Outputs:
             - tuple(int, int, int): start indices (z0, y0, x0) for cropping.
     """
     Z, Y, X = vol_shape
-    dz, dy, dx = patch
+    dz, dy, dx = patch_size
 
     # choose a neuron at random
     nz, ny, nx = neurons[np.random.randint(len(neurons))]
@@ -267,7 +267,7 @@ def choose_positive_start(
 def choose_background_start(
     neurons: np.ndarray,
     vol_shape: tuple,
-    patch: tuple = (96, 96, 96),
+    patch_size: tuple = (96, 96, 96),
     min_dist: int = 8,
     trails: int = 100
 ) -> tuple:
@@ -281,7 +281,7 @@ def choose_background_start(
         Inputs:
             - neurons (np.ndarray): shape(N, 3) or empty list if no neurrons.
             - vol_shape (tuple(int, int, int)): full volume shape (Z, Y, X).
-            - patch (tuplee(int, int, int)): desired patch size (dz, dy, dx).
+            - patch_size (tuplee(int, int, int)): desired patch size (dz, dy, dx).
             - min_dist (int): minimum center-to-centroid distance (vox) for backgroud sampling/
             - trails (int): max random attempts before falling back
 
@@ -289,7 +289,7 @@ def choose_background_start(
             - tuple(int, int, int): start indices (z0, y0, x0) for cropping. 
     """
     Z, Y, X = vol_shape
-    dz, dy, dx = patch
+    dz, dy, dx = patch_size
     n = np.asarray(neurons, dtype=np.float32) if (neurons is not None and len(neurons)) else None
 
     for _ in range(trails):
@@ -300,7 +300,7 @@ def choose_background_start(
         
 
         # if we have neurons, enforce min_dist from all
-        if n is not None and len(n):
+        if n is not None and len(n) > 0:
             d2 = ((n - np.array([z_rand, y_rand, x_rand], np.float32)) ** 2).sum(axis=1)
             if (d2 < (min_dist * min_dist)).any():
                 continue # too close to a neuron, resample

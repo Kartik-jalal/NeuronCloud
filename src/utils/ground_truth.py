@@ -174,7 +174,7 @@ def radius_to_sigma_per_axis(radius, dim_resolution):
                 The Gaussian sigma for each axis (Z, Y, X) in voxel units, 
                 adjusted so that the physical blob size is spherical.
     """
-    dim_resolution = np.asarray(dim_resolution, dtype=np.float32) #for safe math
+    dim_resolution = np.asarray(dim_resolution, dtype=np.float32) # for safe math
 
     # calculate a base sigma to ensures scaling is consistent with smallest dimension.
     # max(1.0, ...) ensures sigma is at least 1 voxel in the smallest axis,
@@ -209,7 +209,6 @@ def build_heatmap_and_peaks(
         arrays=[radius_to_sigma_per_axis(radius, dim_resolution) for radius in neurons[:,-1]],
         axis=0 # sigma per axis per radius
     )
-
 
     # Group points by similar sigma values to avoid blurring individually
     sigma_keys = [
@@ -455,15 +454,15 @@ def generate_ground_truth(
     )
 
     heatmap, peaks, sigmas = build_heatmap_and_peaks(
-        neurons, 
-        dim_resolution,
-        quantize_sigma,
-        ground_truth_shape
+        neurons=neurons, 
+        dim_resolution=dim_resolution,
+        ground_truth_shape=ground_truth_shape,
+        quantize_sigma=quantize_sigma
     )
 
     offsets, offset_mask = build_offsets_and_mask(
-        neurons,
-        ground_truth_shape
+        neurons=neurons,
+        ground_truth_shape=ground_truth_shape
     )
 
     return dict(
