@@ -1,7 +1,8 @@
 """
 
 Last Update:
-    21/09/2025
+    Owner: Kartik M. Jalal
+    Date: 21/09/2025
 """
 
 import torch
