@@ -178,7 +178,6 @@ class NeuronPatchDataset(Dataset):
         img_full = self._get_tiff_img(
             index=index
         )
-        print(img_full.shape)
         gt = self._generate_ground_truth(
             index=index,
             gt_shape=img_full.shape
@@ -188,6 +187,7 @@ class NeuronPatchDataset(Dataset):
         offset_mask_full = gt["offset_mask"]
         neurons = gt["meta"]["neurons"]
 
+        # get the coordinates of the neurons (-1 index is the radius)
         neurons = neurons[:, :-1] if (neurons is not None) and len(neurons) else None
 
         # decide sampling type
