@@ -105,13 +105,13 @@ class NeuronPatchDataset(Dataset):
         # the path to the data
         data_path = self.df["data_path"][index]
         # the tiff image file name
-        img_name = self.df["img_name"][index]
+        tiff_img_name = self.df["tiff_img_name"][index]
         
-        img_path=os.path.join(data_path, img_name)
-        return get_tiff_img(img_path=img_path)
+        tiff_img_path=os.path.join(data_path, tiff_img_name)
+        return get_tiff_img(img_path=tiff_img_path)
     
     
-    def _generate_ground_truth(self, index: int) -> dict:
+    def _generate_ground_truth(self, index: int, gt_shape: tuple) -> dict:
         """
         """
         # Path to the marker
@@ -122,6 +122,7 @@ class NeuronPatchDataset(Dataset):
 
         gt = generate_ground_truth(
             marker_path=marker_path,
+            ground_truth_shape=gt_shape,
             **self.ground_truth_config
         )
         return gt
@@ -174,50 +175,64 @@ class NeuronPatchDataset(Dataset):
                         defined (inside a neuron sphere), 0's elsewhere.
                 )
         """
-        img_full = self._get_tiff_img(index)
-        gt = self._generate_ground_truth(index)
+        img_full = self._get_tiff_img(
+            index=index
+        )
+        print(img_full.shape)
+        gt = self._generate_ground_truth(
+            index=index,
+            gt_shape=img_full.shape
+        )
         hm_full = gt["heatmap"]
         offsets_full = gt["offsets"]
         offset_mask_full = gt["offset_mask"]
         neurons = gt["meta"]["neurons"]
 
+        neurons = neurons[:, :-1] if (neurons is not None) and len(neurons) else None
+
         # decide sampling type
-        take_pos = (np.random.rand() < self.pre_processing_config['positive_patch_prob']) and (neurons is not None) and (len(neurons) > 0)
+        take_pos = (np.random.rand() < self.pre_processing_config['positive_patch_prob']) and (neurons is not None)
         if take_pos:
             start = choose_positive_start(
                 neurons=neurons,
                 vol_shape=img_full.shape,
-                patch=self.pre_processing_config['patch']
+                # patch_size=self.pre_processing_config['patch_size']
+                patch_size=img_full.shape
             )
         else:
             start = choose_background_start(
                 neurons=neurons,
                 vol_shape=img_full.shape,
-                patch=self.pre_processing_config['patch']
+                # patch_size=self.pre_processing_config['patch_size']
+                patch_size=img_full.shape
             )
 
         # performing cropping
         img = crop3d(
             vol=img_full,
             start=start,
-            patch=self.pre_processing_config['patch']
+            # patch_size=self.pre_processing_config['patch_size']
+            patch_size=img_full.shape
         )
         hm = crop3d(
             vol=hm_full,
             start=start,
-            patch=self.pre_processing_config['patch']
+            # patch_size=self.pre_processing_config['patch_size']
+            patch_size=img_full.shape
         )
         offset_mask = crop3d(
             vol=offset_mask_full,
             start=start,
-            patch=self.pre_processing_config['patch']
+            # patch_size=self.pre_processing_config['patch_size']
+            patch_size=img_full.shape
         )
 
         offsets = np.stack([
             crop3d(
                 vol=offsets_full[i],
                 start=start,
-                patch=self.pre_processing_config['patch']
+                # patch_size=self.pre_processing_config['patch_size']
+                patch_size=img_full.shape
             ) for i in range(offsets_full.shape[0])
         ], axis=0) # (3, dz, dy, dx)
 
