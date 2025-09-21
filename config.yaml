@@ -1,13 +1,13 @@
 dir:
-  input: 
-  output: 
+  input:
+  output:
 
 input_data:
-  tiff_suffixes: 
-  marker_suffix: 
+  tiff_suffixes: []
+  marker_suffix:
 
 ground_truth_config:
-  dim_resolution: 
+  dim_resolution:
   use_marker_radius: False # whether to use the .marker* file radius column or not
   default_max_radius: 3.5
   radius_min: 1.0
@@ -18,5 +18,6 @@ ground_truth_config:
 
 pre_processing_config:
   patch_size: [96, 96, 96]
+  use_full_shape: False
   positive_patch_prob: 0.8
   pclip: [0.5, 99.5]
