@@ -173,6 +173,10 @@ def train_val_test_split(
         stratify=train_val["n_neurons_bins"] if straify else None
     )
 
+    train.reset_index(drop=True, inplace=True)
+    val.reset_index(drop=True, inplace=True)
+    test.reset_index(drop=True, inplace=True)
+
     return train, val, test
     
 
