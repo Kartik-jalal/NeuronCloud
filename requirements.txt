@@ -1,22 +1,17 @@
 #### jupyter ####
-ipykernel
-ipywidgets
-#### yaml ####
-PyYAML
-#### tiff ####
-tifffile
-#### pytorch ####
---extra-index-url https://download.pytorch.org/whl/cu128 # For GPU users
-torch
-torchvision
-torchaudio
-#### transformers ####
-transformers
-#### datasets ####
-datasets
+jupyter
+
+#### Monai ####
+monai
+
 #### accelerate ####
 accelerate
-#### scipy ####
-scipy
-#### pip-tools ####
-pip-tools
+
+#### scikit-learn ####
+scikit-learn
+
+#### pandas ####
+pandas
+
+#### tifffile ####
+tifffile
