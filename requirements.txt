@@ -2,7 +2,7 @@
 jupyter
 
 #### Monai ####
-monai
+monai[all]
 
 #### accelerate ####
 accelerate
@@ -10,8 +10,6 @@ accelerate
 #### scikit-learn ####
 scikit-learn
 
-#### pandas ####
-pandas
+#### transformers ####
+transformers
 
-#### tifffile ####
-tifffile
