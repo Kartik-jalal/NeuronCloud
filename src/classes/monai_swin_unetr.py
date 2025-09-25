@@ -7,7 +7,7 @@ Last Update:
 
 import torch
 import torch.nn as nn
-from monai.networks.nets import SwimUNETR
+from monai.networks.nets.swin_unetr import SwinUNETR
 
 class SwimUNETR_Heatmap_offsets(nn.Module):
     """
@@ -18,19 +18,19 @@ class SwimUNETR_Heatmap_offsets(nn.Module):
 
     def __init__(
         self,
-        img_size=(96, 96, 96),
         in_channels=1,
         feature_size=48,
-        use_checkpoint=False
+        use_checkpoint=True,
+        use_v2=True
     ):
         super().__init__()
-        self.net = SwimUNETR(
-            img_size=img_size,
+        self.net = SwinUNETR(
             in_channels=in_channels,
             out_channels=4,
             feature_size=feature_size,
             use_checkpoint=use_checkpoint,
-            spatial_dims=3
+            spatial_dims=3, 
+            use_v2=use_v2
         )
 
     def forward(

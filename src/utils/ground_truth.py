@@ -413,7 +413,7 @@ def generate_ground_truth(
         return dict(
             heatmap=np.zeros(ground_truth_shape, np.float32), # empty heat map
             peaks=np.zeros(ground_truth_shape, np.float32), # empty peaks map
-            offsets=np.zeros([3]+ground_truth_shape, np.float32), # empty offsets map
+            offsets=np.zeros((3, )+ground_truth_shape, np.float32), # empty offsets map
             offset_mask=np.zeros(ground_truth_shape, np.float32), # empty offset mask
             meta=dict(
                 neurons=neurons,
@@ -437,7 +437,7 @@ def generate_ground_truth(
         return dict(
             heatmap=np.zeros(ground_truth_shape, np.float32), # empty heat map
             peaks=np.zeros(ground_truth_shape, np.float32), # empty peaks map
-            offsets=np.zeros([3]+ground_truth_shape, np.float32), # empty offsets map
+            offsets=np.zeros((3, )+ground_truth_shape, np.float32), # empty offsets map
             offset_mask=np.zeros(ground_truth_shape, np.float32), # empty offset mask
             meta=dict(
                 neurons=neurons,
